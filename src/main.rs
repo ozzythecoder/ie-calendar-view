@@ -158,12 +158,23 @@ impl Application {
 
                 match convert_to_ics(opts) {
                     Ok(file) => {
-                        Command::new(get_open_command()).arg(file).spawn().unwrap();
+                        Command::new(self.get_open_command())
+                            .arg(file)
+                            .spawn()
+                            .unwrap();
                         Task::none()
                     }
                     Err(_) => Task::none(),
                 }
             }
+        }
+    }
+
+    fn get_open_command(&self) -> String {
+        match env::consts::OS {
+            "macos" => "open".to_owned(),
+            "windows" => "explorer".to_owned(),
+            _ => "xdg-open".to_owned(),
         }
     }
 
@@ -177,14 +188,6 @@ impl Application {
         } else {
             Some(Message::Convert)
         }
-    }
-}
-
-fn get_open_command() -> String {
-    match env::consts::OS {
-        "macos" => "open".to_owned(),
-        "windows" => "explorer".to_owned(),
-        _ => "xdg-open".to_owned(),
     }
 }
 

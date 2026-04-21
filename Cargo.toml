@@ -1,7 +1,6 @@
 [package]
-name = "ie-calendar-view"
-author = "August McAllister"
-version = "0.1.0"
+name = "ics-converter"
+version = "0.0.1"
 edition = "2024"
 
 [dependencies]

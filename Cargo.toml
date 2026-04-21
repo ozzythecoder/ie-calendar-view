@@ -1,0 +1,13 @@
+[package]
+name = "ie-calendar-view"
+author = "August McAllister"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+csv = "1.4.0"
+ics = "0.5"
+chrono = "0.4"
+serde = { version = "1.0.228", features = ["derive"] }
+iced = "0.14"
+rfd = "0.17.2"

@@ -18,13 +18,22 @@ jobs:
             asset_name: ics-converter-mac
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Build
         run: cargo build --release
+
+      - name: Copy binary (Unix)
+        if: matrix.os != 'windows-latest'
+        run: cp target/release/${{ matrix.artifact_name }} ${{ matrix.asset_name }}
+
+      - name: Copy binary (Windows)
+        if: matrix.os == 'windows-latest'
+        run: copy target\release\${{ matrix.artifact_name }} ${{ matrix.asset_name }}
+        shell: cmd
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.asset_name }}
-          path: target/release/${{ matrix.artifact_name }}
+          path: ${{ matrix.asset_name }}

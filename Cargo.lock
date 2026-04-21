@@ -1407,14 +1407,8 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3ebec52f461ade2d19e7b594ecbcd0723ba0ab0eefa8aae2281b78ff461a91fa"
 
 [[package]]
-name = "id-arena"
-version = "2.3.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3d3067d79b975e8844ca9eb072e16b31c3c1c36928edf9c6789548c524d0d954"
-
-[[package]]
-name = "ie-calendar-view"
-version = "0.1.0"
+name = "ics-converter"
+version = "0.0.1"
 dependencies = [
  "chrono",
  "csv",
@@ -1423,6 +1417,12 @@ dependencies = [
  "rfd",
  "serde",
 ]
+
+[[package]]
+name = "id-arena"
+version = "2.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3d3067d79b975e8844ca9eb072e16b31c3c1c36928edf9c6789548c524d0d954"
 
 [[package]]
 name = "indexmap"

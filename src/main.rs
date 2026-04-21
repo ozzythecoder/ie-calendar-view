@@ -245,10 +245,16 @@ fn convert_to_ics(o: ConvertToIcsOptions) -> Result<OsString, Box<dyn Error>> {
 }
 
 fn main() -> iced::Result {
+    let position = if cfg!(debug_assertions) {
+        window::Position::Specific((800.00, 320.00).into())
+    } else {
+        window::Position::Default
+    };
+
     iced::application(Application::default, Application::update, Application::view)
         .window(window::Settings {
             size: (512.00, 300.00).into(),
-            position: window::Position::Specific((800.00, 320.00).into()),
+            position: position,
             ..Default::default()
         })
         .theme(iced::Theme::CatppuccinMocha)

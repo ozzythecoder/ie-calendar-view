@@ -18,7 +18,7 @@ jobs:
             asset_name: ics-converter-windows.exe
           - os: macos-latest
             artifact_name: ics-converter
-            asset_name: ics-converter-mac
+            asset_name: ics-converter-mac.tar.gz
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v6
@@ -33,7 +33,7 @@ jobs:
           mkdir -p "ICS Converter.app/Contents/Resources"
           cp target/release/ics-converter "ICS Converter.app/Contents/MacOS/"
           cp Info.plist "ICS Converter.app/Contents/"
-          tar -czf ${{ matrix.asset_name }}.tar.gz "ICS Converter.app"
+          tar -czf ${{ matrix.asset_name }} "ICS Converter.app"
 
       - name: Copy binary (Windows)
         if: matrix.os == 'windows-latest'

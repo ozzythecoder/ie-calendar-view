@@ -81,7 +81,9 @@ pub fn parse_event<'a>(record_in: IntellieventRecord) -> Result<Event<'a>, Box<d
 
     // Link to IntelliEvent job
     let description = format!(
-        "Job: https://avex.ielightning.net/job/job?id={}",
+        r"Job: https://avex.ielightning.net/job/job?id={}\nProducts: https://avex.ielightning.net/job/jobProducts?id={}\nPullsheet: https://avex.ielightning.net/management/print/preview?printDetailId=32&refId={}&at=Job",
+        &record.job_number,
+        &record.job_number,
         &record.job_number
     );
     event.push(Property::new("DESCRIPTION", description));

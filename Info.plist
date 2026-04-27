@@ -8,7 +8,7 @@
     <key>CFBundleExecutable</key>
     <string>ics-converter</string>
     <key>CFBundleIdentifier</key>
-    <string>ics-converter</string>
+    <string>com.amcallister.ics-converter</string>
     <key>CFBundleVersion</key>
     <string>1.0.0</string>
     <key>CFBundlePackageType</key>

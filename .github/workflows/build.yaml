@@ -18,7 +18,7 @@ jobs:
             asset_name: ics-converter-windows.exe
           - os: macos-latest
             artifact_name: ics-converter
-            asset_name: ics-converter-mac
+            asset_name: ics-converter-mac.tar.gz
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v6
@@ -30,7 +30,7 @@ jobs:
         if: matrix.os != 'windows-latest'
         run: |
           chmod +x target/release/${{ matrix.artifact_name }}
-          tar -czf ${{ matrix.asset_name }}.tar.gz -C target/release ${{ matrix.artifact_name }}
+          tar -czf ${{ matrix.asset_name }} -C target/release ${{ matrix.artifact_name }}
 
       - name: Copy binary (Windows)
         if: matrix.os == 'windows-latest'

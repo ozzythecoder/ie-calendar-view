@@ -40,7 +40,7 @@ Requires [`rustup`](https://rust-lang.org/tools/install/).
 
 This `.ics` file can now be imported into a calendar of your choosing.
 
-### Suggested workflows
+## Suggested workflows
 
 #### Outlook only
 
@@ -59,7 +59,7 @@ Subsequent imports:
 
 See `A note on re-importing` for more on this.
 
-### A note on re-importing
+## A note on re-importing
 
 I've done my best to account for Outlook's confusing handling of ICS properties, but unfortunately there is no consistent way to guarantee how it handles event updates/duplicates when using direct ICS imports.
 

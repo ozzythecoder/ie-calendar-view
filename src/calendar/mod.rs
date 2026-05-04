@@ -1,5 +1,7 @@
-use std::error::Error;
 use ics::{ICalendar, components::Property};
+use std::{collections::HashMap, error::Error};
+
+use crate::calendar::event::IntellieventRecord;
 
 pub mod event;
 
@@ -30,9 +32,14 @@ pub fn build_calendar(opts: BuildCalendarOptions) -> Result<(ICalendar, i32), Bo
     calendar.push(Property::new("METHOD", "PUBLISH"));
     calendar.push(Property::new("ORGANIZER", "AVEX"));
 
-    for result in reader.deserialize() {
-        let record: event::IntellieventRecord = result?;
-        let event = match event::parse_event(record) {
+    for row in reader.deserialize::<HashMap<String, String>>() {
+        let Ok(record) = IntellieventRecord::from_map(&row?) else {
+            println!("Skipping row due to mapping error");
+            error_count += 1;
+            continue;
+        };
+        
+        let event = match event::parse_event(&record) {
             Ok(v) => v,
             Err(e) => {
                 println!("Skipping row due to parsing error: {}", e);

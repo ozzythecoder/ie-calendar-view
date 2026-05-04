@@ -1,5 +1,8 @@
 #![cfg_attr(target_os = "windows", windows_subsystem = "windows")]
 
+pub mod calendar;
+pub mod csv;
+
 use iced::{
     Length, Task,
     alignment::{Horizontal, Vertical},
@@ -16,8 +19,6 @@ use std::{
     path::{Path, PathBuf},
     process::Command,
 };
-
-pub mod calendar;
 
 #[derive(Default)]
 struct Application {
@@ -164,7 +165,10 @@ impl Application {
                             .unwrap();
                         Task::none()
                     }
-                    Err(_) => Task::none(),
+                    Err(e) => {
+                        println!("Error converting CSV: {}", e);
+                        Task::none()
+                    }
                 }
             }
         }
@@ -180,10 +184,13 @@ impl Application {
 
     fn convert_message(&self) -> Option<Message> {
         if self.csv_path.as_os_str().is_empty() {
+            println!("ERROR: CSV path is empty");
             None
         } else if self.export_path.as_os_str().is_empty() {
+            println!("ERROR: Export path is empty");
             None
         } else if self.filename_out.is_empty() {
+            println!("ERROR: Filename is empty");
             None
         } else {
             Some(Message::Convert)

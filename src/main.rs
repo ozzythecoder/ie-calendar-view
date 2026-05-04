@@ -2,12 +2,15 @@
 
 pub mod calendar;
 pub mod csv;
+pub mod ui;
 
 use iced::{
-    Length, Task,
+    Color, Font, Length, Task,
     alignment::{Horizontal, Vertical},
     color,
-    widget::{Column, Space, button, column, row, text, text_input},
+    futures::never,
+    never,
+    widget::{Column, Space, button, column, rich_text, row, span, text, text_input},
     window,
 };
 use rfd::AsyncFileDialog;
@@ -20,62 +23,107 @@ use std::{
     process::Command,
 };
 
+use crate::ui::confirmation_dialog;
+
 #[derive(Default)]
 struct Application {
+    view: View,
     csv_path: PathBuf,
     export_path: PathBuf,
     filename_out: String,
+}
+
+#[derive(Default)]
+enum View {
+    #[default]
+    Form,
+    ConfirmOverwrite,
 }
 
 #[derive(Debug, Clone)]
 enum Message {
     OpenFileDialog,
     OpenExportDialog,
+    ErrorChanged(String),
     FilenameOutChanged(String),
     FileSelected(Option<PathBuf>),
     ExportPathSelected(Option<PathBuf>),
     Convert,
+    ConfirmOverwrite(confirmation_dialog::Message),
 }
 
 impl Application {
     pub fn view(&self) -> Column<'_, Message> {
-        column![
-            text("Export a CSV from IntelliEvent, then use this tool to convert it into a calendar file. You can then import this file into a calendar app of your choice.")
-                .size(14)
-                .color(color!(180, 180, 180))
-                ,
-            row![
-                button("Choose CSV File").on_press(Message::OpenFileDialog),
-                Space::new().width(Length::Fill),
-                text(self.csv_path.display().to_string()).wrapping(text::Wrapping::WordOrGlyph),
-            ]
-            .spacing(8)
-            .width(Length::Fill)
-            .align_y(Vertical::Center),
-            row![
-                button("Choose Destination")
-                    .on_press(Message::OpenExportDialog),
-                Space::new().width(Length::Fill),
-                text(self.export_path.display().to_string()),
-            ]
-            .spacing(8)
-            .width(Length::Fill)
-            .align_y(Vertical::Center),
-            row![
-                text("Filename:").color(color!(210, 210, 210)),
-                text_input("example", &self.filename_out).on_input(Message::FilenameOutChanged),
-                text(".ics"),
-            ]
-            .spacing(8)
-            .width(Length::Fixed(360.00))
-            .align_y(Vertical::Center),
-            button("Convert!").on_press_maybe(self.convert_message()),
-        ]
-        .spacing(14)
-        .padding(32)
-        .align_x(Horizontal::Center)
-        .width(Length::Fixed(512.00))
-        .into()
+        match self.view  {
+            View::Form => {
+                column![
+                    text("Export a CSV from IntelliEvent, then use this tool to convert it into a calendar file. You can then import this file into a calendar app of your choice.")
+                        .size(14)
+                        .color(color!(180, 180, 180)),
+                    row![
+                        button("Choose CSV File").on_press(Message::OpenFileDialog),
+                        Space::new().width(Length::Fill),
+                        text(self.csv_path.display().to_string()).wrapping(text::Wrapping::WordOrGlyph),
+                    ]
+                    .spacing(8)
+                    .width(Length::Fill)
+                    .align_y(Vertical::Center),
+                    row![
+                        button("Choose Destination")
+                            .on_press(Message::OpenExportDialog),
+                        Space::new().width(Length::Fill),
+                        text(self.export_path.display().to_string()),
+                    ]
+                    .spacing(8)
+                    .width(Length::Fill)
+                    .align_y(Vertical::Center),
+                    row![
+                        text("Filename:").color(color!(210, 210, 210)),
+                        text_input("example", &self.filename_out).on_input(Message::FilenameOutChanged),
+                        text(".ics"),
+                    ]
+                    .spacing(8)
+                    .width(Length::Fixed(360.00))
+                    .align_y(Vertical::Center),
+                    button("Convert!").on_press(Message::Convert),
+                ]
+                .spacing(14)
+                .padding(32)
+                .align_x(Horizontal::Center)
+                .width(Length::Fixed(512.00))
+                .into()
+            },
+            View::ConfirmOverwrite => {
+                column![
+                    rich_text![
+                        span("This will overwrite an existing file at "),
+                        span(
+                            format!(
+                                "{}.ics",
+                                self.export_path.join(&self.filename_out).display().to_string()
+                            )
+                        )
+                        .font(Font { style: iced::font::Style::Italic, ..Font::DEFAULT })
+                        .color(Color::from_rgb(0.5, 0.5, 1.0)),
+                        span(". Proceed?")
+                    ]
+                        .on_link_click(never),
+                    row![
+                        button("Cancel")
+                            .on_press(Message::ConfirmOverwrite(confirmation_dialog::Message::Cancel)),
+                        button("Confirm")
+                            .on_press(Message::ConfirmOverwrite(confirmation_dialog::Message::Confirm))
+                            .style(button::danger),
+                    ]
+                    .padding(8)
+                    .spacing(14)
+                ]
+                .padding(32)
+                .align_x(Horizontal::Center)
+                .width(Length::Fixed(512.00))
+                .into()
+            },
+        }
     }
 
     pub fn update(&mut self, message: Message) -> Task<Message> {
@@ -139,39 +187,45 @@ impl Application {
                 )
             }
             Message::Convert => {
-                let Some(csv_path) = self.csv_path.to_str() else {
-                    // TODO handle error
-                    println!("No csv_path found");
-                    return Task::none();
-                };
-
-                let Some(export_path) = self.export_path.to_str() else {
-                    // TODO handle error
-                    println!("No export_path found");
-                    return Task::none();
-                };
-
-                let opts = ConvertToIcsOptions {
-                    csv_path: csv_path.to_owned(),
-                    export_path: export_path.to_owned(),
-                    filename_out: &self.filename_out,
-                };
-
-                match convert_to_ics(opts) {
-                    Ok(file) => {
-                        Command::new(self.get_open_command())
-                            .arg(file)
-                            .spawn()
-                            .unwrap();
-                        Task::none()
-                    }
-                    Err(e) => {
-                        println!("Error converting CSV: {}", e);
-                        Task::none()
-                    }
+                let mut output = self.export_path.join(&self.filename_out);
+                output.add_extension("ics");
+                println!("Output: {}", output.display());
+                if let Ok(exists) = output.try_exists()
+                    && exists
+                {
+                    self.view = View::ConfirmOverwrite;
+                } else {
+                    self.perform_conversion();
                 }
+                Task::none()
             }
+            Message::ConfirmOverwrite(msg) => match msg {
+                confirmation_dialog::Message::Cancel => {
+                    self.view = View::Form;
+                    Task::none()
+                }
+                confirmation_dialog::Message::Confirm => {
+                    self.perform_conversion();
+                    self.view = View::Form;
+                    Task::none()
+                }
+            },
+            Message::ErrorChanged(msg) => Task::none(),
         }
+    }
+
+    fn perform_conversion(&self) {
+        match convert_to_ics(self.get_conversion_options().unwrap()) {
+            Ok(file) => {
+                Command::new(self.get_open_command())
+                    .arg(file)
+                    .spawn()
+                    .unwrap();
+            }
+            Err(e) => {
+                println!("Error converting CSV: {}", e);
+            }
+        };
     }
 
     fn get_open_command(&self) -> String {
@@ -182,19 +236,24 @@ impl Application {
         }
     }
 
-    fn convert_message(&self) -> Option<Message> {
-        if self.csv_path.as_os_str().is_empty() {
-            println!("ERROR: CSV path is empty");
-            None
-        } else if self.export_path.as_os_str().is_empty() {
-            println!("ERROR: Export path is empty");
-            None
-        } else if self.filename_out.is_empty() {
-            println!("ERROR: Filename is empty");
-            None
-        } else {
-            Some(Message::Convert)
-        }
+    fn get_conversion_options(&self) -> Result<ConvertToIcsOptions<'_>, &str> {
+        let Some(csv_path) = self.csv_path.to_str() else {
+            // TODO handle error
+            println!("No csv_path found");
+            return Err("No");
+        };
+
+        let Some(export_path) = self.export_path.to_str() else {
+            // TODO handle error
+            println!("No export_path found");
+            return Err("No");
+        };
+
+        Ok(ConvertToIcsOptions {
+            csv_path: csv_path.to_owned(),
+            export_path: export_path.to_owned(),
+            filename_out: &self.filename_out,
+        })
     }
 }
 

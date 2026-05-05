@@ -1,32 +1,37 @@
+pub mod event;
+
 use ics::{ICalendar, components::Property};
-use std::{collections::HashMap, error::Error};
+use std::{collections::HashMap, error::Error, path::PathBuf};
 
 use crate::calendar::event::IntellieventRecord;
 
-pub mod event;
-
-pub struct BuildCalendarOptions<'a> {
-    pub csv_file_path: &'a str,
-    pub filename_out: &'a str,
+pub struct BuildCalendarOptions {
+    pub csv_file_path: PathBuf,
+    pub filename_out: PathBuf,
 }
 
-impl Default for BuildCalendarOptions<'_> {
+impl Default for BuildCalendarOptions {
     fn default() -> Self {
         BuildCalendarOptions {
-            csv_file_path: "./Jobs.csv",
-            filename_out: "Jobs.ics",
+            csv_file_path: PathBuf::from("./Jobs.csv"),
+            filename_out: PathBuf::from("./Jobs.csv"),
         }
     }
 }
 
-pub fn build_calendar(opts: BuildCalendarOptions) -> Result<(ICalendar, i32), Box<dyn Error>> {
+pub fn build_calendar<'a>(
+    opts: &'a BuildCalendarOptions,
+) -> Result<(ICalendar<'a>, i32), Box<dyn Error>> {
     let mut reader = csv::ReaderBuilder::new()
         .has_headers(true)
-        .from_path(opts.csv_file_path)?;
+        .from_path(opts.csv_file_path.clone())?;
 
     let mut error_count = 0;
+    let Some(filename_out) = opts.filename_out.to_str() else {
+        return Err(Box::<dyn Error>::from("Malformed filename"));
+    };
 
-    let mut calendar = ICalendar::new("2.0", opts.filename_out);
+    let mut calendar = ICalendar::new("2.0", filename_out);
 
     // enable updating/editing old events
     calendar.push(Property::new("METHOD", "PUBLISH"));
@@ -38,7 +43,7 @@ pub fn build_calendar(opts: BuildCalendarOptions) -> Result<(ICalendar, i32), Bo
             error_count += 1;
             continue;
         };
-        
+
         let event = match event::parse_event(&record) {
             Ok(v) => v,
             Err(e) => {

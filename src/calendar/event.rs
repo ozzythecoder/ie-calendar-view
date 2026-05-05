@@ -66,7 +66,8 @@ pub fn parse_event<'a>(record: &IntellieventRecord) -> Result<Event<'a>, Box<dyn
     // LAST-MODIFIED - allows for overwriting events in Apple Calendar
     event.push(Property::new("LAST-MODIFIED", utc_to_ics_date(Utc::now())));
 
-    // Link to IntelliEvent job
+    // Link to IntelliEvent jobs
+    // We need the literal '\n' to show up in the string for the line break to be respected
     let description = format!(
         "Job: https://avex.ielightning.net/job/job?id={0}\\n\
         Products: https://avex.ielightning.net/job/jobProducts?id={0}\\n\

@@ -10,15 +10,6 @@ pub struct BuildCalendarOptions {
     pub filename_out: PathBuf,
 }
 
-impl Default for BuildCalendarOptions {
-    fn default() -> Self {
-        BuildCalendarOptions {
-            csv_file_path: PathBuf::from("./Jobs.csv"),
-            filename_out: PathBuf::from("./Jobs.csv"),
-        }
-    }
-}
-
 pub fn build_calendar<'a>(
     opts: &'a BuildCalendarOptions,
 ) -> Result<(ICalendar<'a>, i32), Box<dyn Error>> {
@@ -55,6 +46,6 @@ pub fn build_calendar<'a>(
         calendar.add_event(event);
     }
 
-    println!("Parsing complete.");
+    println!("Calendar built.");
     Ok((calendar, error_count))
 }

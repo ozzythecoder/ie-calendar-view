@@ -47,6 +47,7 @@ impl Application {
                                 export_path: export_path,
                                 filename_out: filename_out,
                             };
+                            self.set_conversion_options(&opts);
                             let (exists, output_path) = duplicate_exists(&opts);
                             if exists {
                                 let new_screen =
@@ -55,7 +56,6 @@ impl Application {
                             } else {
                                 self.perform_convert();
                             }
-                            self.conversion_details = Some(opts);
                         }
                     };
                     
@@ -78,6 +78,10 @@ impl Application {
                 }
             },
         }
+    }
+
+    fn set_conversion_options(&mut self, opts: &ConversionDetails) {
+        self.conversion_details = Some(opts.to_owned());
     }
 
     fn perform_convert(&mut self) {

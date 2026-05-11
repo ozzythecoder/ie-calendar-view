@@ -41,12 +41,6 @@ pub fn convert_to_ics(o: ConversionDetails) -> Result<PathBuf, Box<dyn Error>> {
 
     println!("Writing to {}", output_path.display());
 
-    if let Ok(e) = output_path.try_exists()
-        && e
-    {
-        println!("Overwriting file at {}", output_path.display())
-    }
-
     cal.save_file(&output_path)?;
     if let Some(parent) = output_path.parent() {
         Ok(parent.into())
